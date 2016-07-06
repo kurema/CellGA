@@ -3,51 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace cellularAutomaton
+namespace kurema.CellGA.CellularAutomaton
 {
     public class HoneycombCellUnbounded
     {
-            
-    }
+        Primitives.Collections.Unbounded2dArraySquare<int> Content = new Primitives.Collections.Unbounded2dArraySquare<int>(-1);
 
-    public class Basic
-    {
-        public class ExpandableMap<T>
-        {
-            public T defaultValue;
-            private T[,] Core;
-            private int CoreX;
-            private int CoreY;
-            private List<T> Attachment = new List<T>();
-            private List<DirectionLengthCombination> AttachmentDirection = new List<DirectionLengthCombination>();
 
-            private enum Direction
-            {
-                Up,Down,Right,Left
-            }
-
-            private struct DirectionLengthCombination
-            {
-                Direction Direction;
-                int Length;
-            }
-
-            public T Get(int x,int y)
-            {
-                int RightCoor = CoreX;
-                int TopCoor = CoreY;
-                int LeftCoor = CoreX + Core.GetLength(0);
-                int BottomCoor = CoreY + Core.GetLength(1);
-                for (int i = 0; i < AttachmentDirection.Count; i++)
-                {
-                    if (RightCoor <= x && x < LeftCoor && TopCoor <= y && y < BottomCoor)
-                    {
-
-                    }
-                }
-
-                return defaultValue;
-            }
-        }
     }
 }

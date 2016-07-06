@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace kurema.Primitives
+namespace kurema.CellGA.Primitives
 {
     public class Collections
     {
