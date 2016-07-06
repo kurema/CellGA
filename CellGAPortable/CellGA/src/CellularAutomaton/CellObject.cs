@@ -25,36 +25,122 @@ namespace CellGA.RhinoTools
 
         public class BoxelUnbounded : IBoxel
         {
-            public int defaultValue { get; private set; } = 0;
-            public List<Collections.IUnbounded2dArray<int>> Content { get; private set; } = new List<Collections.IUnbounded2dArray<int>>();
+            public int DefaultValue { get; private set; } = 0;
+            private List<Collections.IUnbounded2dArray<int>> Content= new List<Collections.IUnbounded2dArray<int>>();
+            //private int ZOffset = 0;
 
             public BoxelUnbounded() { }
             public BoxelUnbounded(BoxelUnbounded org) {
-                this.defaultValue = org.defaultValue;
-                throw new NotImplementedException();
+                this.DefaultValue = org.DefaultValue;
+                this.Content = new List<Collections.IUnbounded2dArray<int>>(org.GetDump());
             }
 
             public void Apply(IRule rule)
             {
-                throw new NotImplementedException();
+                var Origin = (BoxelUnbounded)this.Duplicate();
+                var orgContent = this.GetDump();
+                var maxFloor = Content.Count;
+
+                for (int z = 0; z < maxFloor + 1; z++)
+                {
+                    //ToDo:一階分増やす。
+                    int x1, y1, x2, y2;
+                    Origin.GetSize(z,out x1, out y1, out x2, out y2);
+
+                    for(int i = x1-1; i <= x2+1; i++)
+                    {
+                        for (int j = y1 - 1; j <= y2 + 1; j++)
+                        {
+                            this.SetValue(i, j, z, rule.GetStatus(Origin.GetNeighbor(i, j, z), i, j, z));
+                        }
+                    }
+                }
+            }
+
+            public void GetSize(int z, out int x1, out int y1, out int x2, out int y2)
+            {
+                if (this.Content.Count == 0)
+                {
+                    x1 = y1 = x2 = y2 = 0;
+                    return;
+                }
+                this.Content[Math.Min(z, Content.Count - 1)].GetSize(out x1, out y1, out x2, out y2);
             }
 
             public IBoxel Duplicate()
             {
-                throw new NotImplementedException();
+                return new BoxelUnbounded(this);
             }
+
 
             public NeighborStatus GetNeighbor(int x, int y, int z)
             {
-                throw new NotImplementedException();
+                NeighborStatus result = new NeighborStatus();
+
+                result.LowerNeighbor = new int[9];
+                for(int i = -1; i <= 1; i++)
+                {
+                    for (int j = -1; j <= 1; j++) {
+                        result.LowerNeighbor[(i + 1) * 3 + (j + 1)] = this.GetValue(x + i, y + j, z - 1);
+                    }
+                }
+                result.Lower = GetValue(x, y, z - 1);
+
+                result.Neighbor = new int[9];
+                for (int i = -1; i <= 1; i++)
+                {
+                    for (int j = -1; j <= 1; j++)
+                    {
+                        result.Neighbor[(i + 1) * 3 + (j + 1)] = this.GetValue(x + i, y + j, z);
+                    }
+                }
+                result.Self = GetValue(x, y, z - 1);
+
+                result.UpperNeighbor = new int[9];
+                for (int i = -1; i <= 1; i++)
+                {
+                    for (int j = -1; j <= 1; j++)
+                    {
+                        result.UpperNeighbor[(i + 1) * 3 + (j + 1)] = this.GetValue(x + i, y + j, z - 1);
+                    }
+                }
+                result.Upper = GetValue(x, y, z - 1);
+
+                return result;
             }
 
             public void Init(int x, int y, int z)
             {
-                for(int i = 0; i < z + 2; z++)
+            }
+
+            public int GetValue(int x, int y, int z)
+            {
+                if (z < 0) { return DefaultValue; }
+                if (z >= Content.Count)
                 {
-                    Content.Add(new Primitives.Collections.Unbounded2dArraySquare<int>(defaultValue));
+                    return DefaultValue;
                 }
+                return Content[z].Get(x, y);
+            }
+
+            public Collections.IUnbounded2dArray<int>[] GetDump()
+            {
+                var result = new Collections.IUnbounded2dArray<int>[Content.Count];
+                for(int i = 0; i < Content.Count; i++)
+                {
+                    result[i] = Content[i].Duplicate();
+                }
+                return result;
+            }
+
+            public void SetValue(int x, int y, int z, int Value)
+            {
+                while (z >= Content.Count)
+                {
+                    Content.Add(new Collections.Unbounded2dArraySquare<int>(DefaultValue));
+                }
+                var org = Content[z].Get(x, y);
+                Content[z].Set(x, y, Value == -1 ? org : Value);
             }
         }
 

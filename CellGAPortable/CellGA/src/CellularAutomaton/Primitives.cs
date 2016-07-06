@@ -18,6 +18,7 @@ namespace CellGA.Primitives
             T Get(int x, int y);
             void Set(int x, int y, T value);
             IUnbounded2dArray<T> Duplicate();
+            void GetSize(out int x1, out int y1, out int x2, out int y2);
         }
 
         public struct AddressValuePair2d<T>
@@ -62,6 +63,7 @@ namespace CellGA.Primitives
                 if (index < Content.Count)
                 {
                     Content[index] = value;
+                    return;
                 }
                 for (int i = Content.Count; i < index; i++)
                 {
@@ -148,6 +150,15 @@ namespace CellGA.Primitives
             public IUnbounded2dArray<T> Duplicate()
             {
                 return new Unbounded2dArraySquare<T>(this);
+            }
+
+            public void GetSize(out int x1, out int y1, out int x2, out int y2)
+            {
+                int MaxNum = (int)Math.Floor(Math.Sqrt(Content.Count - 1) / 2.0 + 0.5);
+                x1 = -MaxNum;
+                y1 = -MaxNum;
+                x2 = MaxNum;
+                y2 = MaxNum;
             }
         }
     }
