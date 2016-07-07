@@ -500,6 +500,84 @@ namespace CellGA.RhinoTools
 
         public class Rules
         {
+            public class GeneralHorizontalAndUpDown : IRule
+            {
+                public int[] Paramater { get; set; }
+
+                public int GetStatus(NeighborStatus neighbor, int x, int y, int z)
+                {
+                    int baseNum = 1;
+                    int targetNum = 0;
+                    int targetNumNoUpDown;
+                    for (int i = 0; i <= neighbor.Neighbor.Count(); i++)
+                    {
+                        if (neighbor.Neighbor[i] == Paramater[0])
+                        {
+                            targetNum += baseNum;
+                        }
+                        baseNum *= 2;
+                    }
+                    targetNumNoUpDown = targetNum;
+                    if (neighbor.Lower == Paramater[0]) targetNum += baseNum;
+                    baseNum *= 2;
+                    if (neighbor.Upper == Paramater[0]) targetNum += baseNum;
+
+                    if (targetNum + 1 < Paramater.Count())
+                    {
+                        return Paramater[targetNum + 1];
+                    }
+                    else if(targetNumNoUpDown + 1 < Paramater.Count())
+                    {
+                        return Paramater[targetNumNoUpDown + 1];
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+
+                public GeneralHorizontalAndUpDown(int Counttarget, int[] RuleNumber)
+                {
+                    var temp = new List<int>() { Counttarget };
+                    temp.AddRange(RuleNumber);
+                    this.Paramater = temp.ToArray();
+                }
+            }
+
+
+            public class GeneralHorizontal : IRule
+            {
+                public int[] Paramater { get; set; }
+
+                public int GetStatus(NeighborStatus neighbor, int x, int y, int z)
+                {
+                    int baseNum = 1;
+                    int targetNum = 0;
+                    for(int i = 0; i <= neighbor.Neighbor.Count(); i++)
+                    {
+                        if (neighbor.Neighbor[i] == Paramater[0])
+                        {
+                            targetNum += baseNum;
+                        }
+                        baseNum *= 2;
+                    }
+                    if (targetNum + 1 < Paramater.Count())
+                    {
+                        return Paramater[targetNum + 1];
+                    }else
+                    {
+                        return -1;
+                    }
+                }
+
+                public GeneralHorizontal(int Counttarget,int[] RuleNumber)
+                {
+                    var temp = new List<int>() { Counttarget};
+                    temp.AddRange(RuleNumber);
+                    this.Paramater = temp.ToArray();
+                }
+            }
+
             public class Count : IRule
             {
                 public int[] Paramater { get; set; }
