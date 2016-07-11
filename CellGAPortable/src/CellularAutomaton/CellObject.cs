@@ -72,6 +72,24 @@ namespace CellGA.RhinoTools
                 return new BoxelUnbounded(this);
             }
 
+            public string ToString(int z)
+            {
+                var result = new System.Text.StringBuilder();
+
+                int x1, x2, y1, y2;
+                GetSize(z, out x1, out y1, out x2, out y2);
+                for (int x = x1; x < x2; x++)
+                {
+                    for (int y = y1; y < y2; y++)
+                    {
+                        result.Append(this.GetValue(x, y, z));
+                        result.Append(",");
+                    }
+                    result.AppendLine();
+                }
+                return result.ToString();
+            }
+
 
             public NeighborStatus GetNeighbor(int x, int y, int z)
             {
@@ -94,7 +112,7 @@ namespace CellGA.RhinoTools
                         result.Neighbor[(i + 1) * 3 + (j + 1)] = this.GetValue(x + i, y + j, z);
                     }
                 }
-                result.Self = GetValue(x, y, z - 1);
+                result.Self = GetValue(x, y, z);
 
                 result.UpperNeighbor = new int[9];
                 for (int i = -1; i <= 1; i++)
@@ -104,7 +122,7 @@ namespace CellGA.RhinoTools
                         result.UpperNeighbor[(i + 1) * 3 + (j + 1)] = this.GetValue(x + i, y + j, z - 1);
                     }
                 }
-                result.Upper = GetValue(x, y, z - 1);
+                result.Upper = GetValue(x, y, z + 1);
 
                 return result;
             }
@@ -509,7 +527,7 @@ namespace CellGA.RhinoTools
                     int baseNum = 1;
                     int targetNum = 0;
                     int targetNumNoUpDown;
-                    for (int i = 0; i <= neighbor.Neighbor.Count(); i++)
+                    for (int i = 0; i < neighbor.Neighbor.Count(); i++)
                     {
                         if (neighbor.Neighbor[i] == Paramater[0])
                         {
@@ -543,7 +561,6 @@ namespace CellGA.RhinoTools
                     this.Paramater = temp.ToArray();
                 }
             }
-
 
             public class GeneralHorizontal : IRule
             {
