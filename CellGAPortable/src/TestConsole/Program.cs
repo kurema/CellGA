@@ -10,8 +10,8 @@ namespace TestConsole
     {
         public static void Main(string[] args)
         {
-            RealAddress();
-            //TestGA1();
+            //RealAddress();
+            TestGA1();
 
             Console.Read();
         }
@@ -74,51 +74,56 @@ namespace TestConsole
             Random rd = new Random();
 
             int samples = 30;
-            var genes = new Gene[samples];
+            var genes = new List<Gene>(samples);
+            var evaluationList = new List<double>(samples);
+
             for (int i = 0; i < samples; i++)
             {
-                genes[i] = new Gene();
+                genes.Add(new Gene());
                 genes[i].Init(rd.Next());
             }
 
-            CellObject.BoxelUnbounded best = new CellObject.BoxelUnbounded();
-            double maxVal = double.MinValue;
-
-            for (int j = 0; j < 10; j++)
+            for (int j = 0; j < 100; j++)
             {
-                Console.WriteLine(j+"..");
-                int del = -1;
-                double minVal = double.MaxValue;
-
-                double currentBestVal = double.MinValue;
+                var Evaluations = new Dictionary<Gene, double>();
+                Console.WriteLine(j + "..");
 
                 for (int i = 0; i < samples; i++)
                 {
-                    genes[i].Randominze(3);
-                    var res = genes[i].GetBoxel();
-                    var ev = genes[i].Evaluate(res);
+                    genes[i].RandomizeSeed(0.01);
+                    genes[i].RandomizeTarget(0.01);
 
-                    currentBestVal = Math.Max(currentBestVal,ev);
+                    Evaluations[genes[i]] = Gene.Evaluate(genes[i].GetBoxel(10));
+                }
 
-                    if (ev > maxVal)
+                genes.Sort((a, b) => { return ((Evaluations[b].CompareTo(Evaluations[a]))); });
+                for (int i = 0; i < samples; i++)
+                {
+                    Console.WriteLine(Evaluations[genes[i]]);
+                }
+
+                for (int i = 0; i < samples; i++)
+                {
+                    if (Evaluations[genes[i]] < 0.1 || i > genes.Count * 0.7)
                     {
-                        maxVal = ev;
-                        best = res;
-                    }
+                        var rand = rd.NextDouble();
 
-                    if (ev < minVal)
-                    {
-                        minVal = ev;
-                        del = i;
+                        if (rand < 0.5)
+                        {
+                            genes[i] = new Gene();
+                            genes[i].Init(rd.Next());
+                        }
+                        else
+                        {
+                            genes[i] = genes[rd.Next(genes.Count)].Duplicate();
+                            genes[i].Swap(genes[rd.Next(genes.Count)]);
+                        }
                     }
                 }
-                Console.WriteLine(currentBestVal);
-                genes[del] = new Gene();
-                genes[del].Init(rd.Next());
+                Console.WriteLine("Best:" + Gene.Evaluate(genes[0].GetBoxel(10)));
             }
             Console.WriteLine();
-            Console.WriteLine(maxVal);
-            Console.WriteLine(best.ToString(0));
+            Console.WriteLine(genes[0].GetBoxel(10).ToString(0));
         }
 
         public class Gene
@@ -128,7 +133,7 @@ namespace TestConsole
             public int[] Seed;
             public int Target;
 
-            int MaxValue=4;
+            int MaxValue=3;
 
             public void Init(int seed)
             {
@@ -140,41 +145,73 @@ namespace TestConsole
                     Seed[i] = Random.Next(MaxValue);
                 }
 
-                Target = Random.Next(MaxValue);
+                Target = Random.Next(MaxValue - 1) + 1;
             }
 
-            public void Randominze(int cnt)
+            public void RandomizeSeed(double rate)
             {
-                for(int i = 0; i < cnt; i++)
+                for (int i = 0; i < this.Seed.Count() * rate; i++)
                 {
                     Seed[Random.Next(2048)] = Random.Next(MaxValue);
                 }
             }
 
-            public Gene Duplicate()
+            public void Swap(Gene target)
             {
-                return new Gene() { Seed = this.Seed, Target = this.Target };
+                int minSeedCnt = Math.Min(target.Seed.Count(), this.Seed.Count());
+                if (this != target)
+                {
+                    int a = Random.Next(minSeedCnt);
+                    int b = Random.Next(minSeedCnt);
+
+                    for(int i= Math.Min(a, b); i < Math.Max(a, b); i++)
+                    {
+                        int temp = target.Seed[i];
+                        //target.Seed[i] = this.Seed[i];
+                        this.Seed[i] = temp;
+                    }
+                }
             }
 
-            public CellGA.RhinoTools.CellObject.BoxelUnbounded GetBoxel()
+            public void RandomizeTarget(double rate)
+            {
+                if (Random.NextDouble() < rate)
+                {
+                    Target = Random.Next(MaxValue - 1) + 1;
+                }
+            }
+
+            public Gene Duplicate()
+            {
+                var result = new Gene();
+                result.Init(Random.Next());
+                result.Target = this.Target;
+                result.Seed = new int[this.Seed.Count()];
+                result.MaxValue = this.MaxValue;
+                Array.Copy(this.Seed, result.Seed, this.Seed.Count());
+                return result;
+            }
+
+            public CellGA.RhinoTools.CellObject.BoxelUnbounded GetBoxel(int cnt)
             {
                 var map = new CellObject.BoxelUnbounded();
                 map.Apply(new CellObject.Rules.BuildCylinder(1, 0, 0, 1));
 
-                for (int i = 0; i < Random.Next(10) + 10; i++)
+                for (int i = 0; i < cnt; i++)
                 {
                     map.Apply(new CellObject.Rules.GeneralHorizontalAndUpDown(this.Target, this.Seed));
                 }
                 return map;
             }
 
-            public double Evaluate(CellObject.BoxelUnbounded map)
+            public static double Evaluate(CellObject.BoxelUnbounded map)
             {
                 int x1, x2, y1, y2;
                 int z = 0;
                 map.GetSize(z, out x1, out y1, out x2, out y2);
                 double e1 = 0, e2 = 0, e3 = 0;
-                int c1 = 1, c2 = 1, c3 = 1;
+                int count = 0;
+
                 for (int x = x1; x < x2; x++)
                 {
                     for (int y = y1; y < y2; y++)
@@ -184,29 +221,19 @@ namespace TestConsole
                         switch (neigh.Self)
                         {
                             case 1:
-                                c1++;
-                                //e1 += 1 - (neigh.CountNeighbor(2) / (8.0 - neigh.CountNeighbor(0) - neigh.CountNeighbor(-1)));
-                                e1 += 1 - Math.Pow( Math.Abs(4 - neigh.CountNeighbor(2))/4.0,3);
+                                e1 += 1 - Math.Pow( Math.Abs(4 - neigh.CountNeighbor(2))/4.0,6);
                                 break;
                             case 2:
-                                c2++;
-                                e2 += 1 - Math.Pow(Math.Abs(4 - neigh.CountNeighbor(1)) / 4.0, 3);
-                                //if (neigh.CountNeighbor(3) > 0) {
-                                //    e2+=0.5;
-                                //}
-                                //if (neigh.CountNeighbor(1) > 0)
-                                //{
-                                //    e2 += 0.5;
-                                //}
+                                e2 += 1 - Math.Pow(Math.Abs(4 - neigh.CountNeighbor(1)) / 4.0, 6);
                                 break;
                             case 3:
-                                c3++;
                                 break;
                         }
+                        count++;
                     }
                 }
                 //return e1 / c1 + e2 / c2;
-                return e1 + e2;
+                return (e1 + e2) / count;
             }
         }
     }
