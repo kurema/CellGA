@@ -83,17 +83,17 @@ namespace TestConsole
                 genes[i].Init(rd.Next());
             }
 
-            for (int j = 0; j < 100; j++)
+            for (int j = 0; j < 10; j++)
             {
                 var Evaluations = new Dictionary<Gene, double>();
                 Console.WriteLine(j + "..");
 
                 for (int i = 0; i < samples; i++)
                 {
-                    genes[i].RandomizeSeed(0.01);
-                    genes[i].RandomizeTarget(0.01);
+                    genes[i].RandomizeSeed(0.001);
+                    genes[i].RandomizeTarget(0.001);
 
-                    Evaluations[genes[i]] = Gene.Evaluate(genes[i].GetBoxel(10));
+                    Evaluations[genes[i]] = Gene.Evaluate(genes[i], 3, 6, 9);
                 }
 
                 genes.Sort((a, b) => { return ((Evaluations[b].CompareTo(Evaluations[a]))); });
@@ -104,7 +104,7 @@ namespace TestConsole
 
                 for (int i = 0; i < samples; i++)
                 {
-                    if (Evaluations[genes[i]] < 0.1 || i > genes.Count * 0.7)
+                    if (Evaluations[genes[i]] < 0.1 || i > genes.Count * 0.5)
                     {
                         var rand = rd.NextDouble();
 
@@ -112,18 +112,26 @@ namespace TestConsole
                         {
                             genes[i] = new Gene();
                             genes[i].Init(rd.Next());
+                            genes[i].RandomizeSeed(0.01);
+                            genes[i].RandomizeTarget(0.01);
                         }
                         else
                         {
-                            genes[i] = genes[rd.Next(genes.Count)].Duplicate();
-                            genes[i].Swap(genes[rd.Next(genes.Count)]);
+                            genes[i] = genes[rd.Next(genes.Count/3)].Duplicate();
+                            genes[i].Swap(genes[rd.Next(genes.Count/3)]);
+                            genes[i].RandomizeSeed(0.01);
+                            genes[i].RandomizeTarget(0.01);
                         }
                     }
                 }
-                Console.WriteLine("Best:" + Gene.Evaluate(genes[0].GetBoxel(10)));
+                Console.WriteLine("Best:" + Evaluations[genes[0]]);
             }
             Console.WriteLine();
-            Console.WriteLine(genes[0].GetBoxel(10).ToString(0));
+            Console.WriteLine(genes[0].GetBoxel(3).ToString(0));
+            Console.WriteLine();
+            Console.WriteLine(genes[0].GetBoxel(6).ToString(0));
+            Console.WriteLine();
+            Console.WriteLine(genes[0].GetBoxel(9).ToString(0));
         }
 
         public class Gene
@@ -204,6 +212,17 @@ namespace TestConsole
                 return map;
             }
 
+            public static double Evaluate(Gene g,params int[] size)
+            {
+                double result = 0;
+                foreach(var item in size)
+                {
+                    var temp= Evaluate(g.GetBoxel(item));
+                    result += temp * temp;
+                }
+                return result;
+            }
+
             public static double Evaluate(CellObject.BoxelUnbounded map)
             {
                 int x1, x2, y1, y2;
@@ -211,6 +230,7 @@ namespace TestConsole
                 map.GetSize(z, out x1, out y1, out x2, out y2);
                 double e1 = 0, e2 = 0, e3 = 0;
                 int count = 0;
+                int c1 = 0, c2 = 0, c3 = 0;
 
                 for (int x = x1; x < x2; x++)
                 {
@@ -221,12 +241,15 @@ namespace TestConsole
                         switch (neigh.Self)
                         {
                             case 1:
-                                e1 += 1 - Math.Pow( Math.Abs(4 - neigh.CountNeighbor(2))/4.0,6);
+                                e1 += Math.Pow(0.1, Math.Abs(neigh.CountNeighbor(2) - 8));
+                                c1++;
                                 break;
                             case 2:
-                                e2 += 1 - Math.Pow(Math.Abs(4 - neigh.CountNeighbor(1)) / 4.0, 6);
+                                e2 += Math.Pow(0.1, Math.Abs(neigh.CountNeighbor(1) - 1));
+                                c2++;
                                 break;
                             case 3:
+                                c3++;
                                 break;
                         }
                         count++;
