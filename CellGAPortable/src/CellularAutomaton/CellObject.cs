@@ -35,6 +35,11 @@ namespace CellGA.RhinoTools
                 this.Content = new List<Collections.IUnbounded2dArray<int>>(org.GetDump());
             }
 
+            public bool IsConnected(int x1, int y1, int x2, int y2, int z)
+            {
+                throw new NotImplementedException();
+            }
+
             public void Apply(IRule rule)
             {
                 var Origin = (BoxelUnbounded)this.Duplicate();
@@ -435,6 +440,22 @@ namespace CellGA.RhinoTools
             }
         }
 
+        public class NeighborAddress
+        {
+            public Address[] Neighbor;
+            public Address Self;
+            public Address[] UpperNeighbor;
+            public Address Upper;
+            public Address[] LowerNeighbor;
+            public Address Lower;
+
+            public struct Address
+            {
+                public int x;
+                public int y;
+                public int z;
+            }
+        }
 
         public class NeighborStatus
         {
@@ -518,6 +539,51 @@ namespace CellGA.RhinoTools
 
         public class Rules
         {
+            public class GeneralDefaultAssumption : IRule
+            {
+                //パラメーターは0:デフォルト出力,1-(隣接セル数):適合パターン,(隣接セル数)+1:適合した場合の出力...
+                public int[] Paramater { get; set; }
+
+                public int TargetNeighborCount;
+
+                public int GetStatus(NeighborStatus neighbor, int x, int y, int z)
+                {
+                    for (int i = 0; (i + 1) * (neighbor.Neighbor.Count()+1) + 1 <= this.Paramater.Count(); i++)
+                    {
+                        int offset = i * (neighbor.Neighbor.Count() + 1) + 1;
+                        for (int j = 0; j < neighbor.Neighbor.Count(); j++)
+                        {
+                            if (Paramater[offset + j] != neighbor.Neighbor[i])
+                            {
+                                goto fail;
+                            }
+                        }
+                        return Paramater[offset + neighbor.Neighbor.Count()];
+                        fail:
+                        break;
+                    }
+                    return Paramater[0];
+                }
+
+                public void AddPattern(params int[] param)
+                {
+                    if (param.Count() % (TargetNeighborCount + 1) != 0) { throw new Exception(); }
+                    var result = new int[Paramater.Count() + param.Count()];
+                    Array.Copy(Paramater, result, Paramater.Count());
+                    Array.Copy(param, 0, result, Paramater.Count(), param.Count());
+                    Paramater = param;
+                }
+
+                public GeneralDefaultAssumption(int defaultValue,int targetNeighborCount,params int[] param)
+                {
+                    this.Paramater = new int[param.Count()+1];
+                    this.TargetNeighborCount = targetNeighborCount;
+                    if (param.Count() % (TargetNeighborCount + 1) != 0) { throw new Exception(); }
+                    this.Paramater[0] = defaultValue;
+                    Array.Copy(param, 0, this.Paramater, 1, param.Count());
+                }
+            }
+
             public class GeneralHorizontalAndUpDown : IRule
             {
                 public int[] Paramater { get; set; }

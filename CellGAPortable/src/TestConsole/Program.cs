@@ -242,10 +242,11 @@ namespace TestConsole
                         {
                             case 1:
                                 e1 += Math.Pow(0.1, Math.Abs(neigh.CountNeighbor(2) - 8));
+                                e1 += neigh.CountNeighbor(3) > 0 ? 1 : 0;
                                 c1++;
                                 break;
                             case 2:
-                                e2 += Math.Pow(0.1, Math.Abs(neigh.CountNeighbor(1) - 1));
+                                e2 += Math.Pow(0.1, Math.Abs(neigh.CountNeighbor(2) - 2));
                                 c2++;
                                 break;
                             case 3:
