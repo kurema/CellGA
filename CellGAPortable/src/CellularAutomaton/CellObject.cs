@@ -35,11 +35,6 @@ namespace CellGA.RhinoTools
                 this.Content = new List<Collections.IUnbounded2dArray<int>>(org.GetDump());
             }
 
-            public bool IsConnected(int x1, int y1, int x2, int y2, int z)
-            {
-                throw new NotImplementedException();
-            }
-
             public void Apply(IRule rule)
             {
                 var Origin = (BoxelUnbounded)this.Duplicate();
@@ -215,6 +210,8 @@ namespace CellGA.RhinoTools
                         , Content[x, y + 1, floor], Content[x + 2, y + 1, floor]
                         , Content[x, y + 2, floor], Content[x + 1, y + 2, floor], Content[x + 2, y + 2, floor] };
                 result.Upper = Content[x + 1, y + 1, floor];
+
+                result.Position = new PositionXYZ(x, y, z);
                 return result;
             }
 
@@ -269,8 +266,6 @@ namespace CellGA.RhinoTools
 
         }
 
-
-
         public class Honeycomb : IBoxel
         {
             private int[,,] Content;
@@ -318,6 +313,8 @@ namespace CellGA.RhinoTools
                 result.UpperNeighbor = new int[] { Content[x + 1+shift, y + 2, floor],Content[x + 2, y + 1, floor],Content[x + 1+shift, y, floor]
                         , Content[x+shift, y, floor], Content[x, y + 1, floor], Content[x+shift, y + 2, floor] };
                 result.Upper = Content[x + 1, y + 1, floor];
+
+                result.Position = new PositionXYZ(x, y, z);
                 return result;
             }
 
@@ -440,20 +437,21 @@ namespace CellGA.RhinoTools
             }
         }
 
-        public class NeighborAddress
+        public interface IPosition
         {
-            public Address[] Neighbor;
-            public Address Self;
-            public Address[] UpperNeighbor;
-            public Address Upper;
-            public Address[] LowerNeighbor;
-            public Address Lower;
+        }
+        
+        public class PositionXYZ:IPosition
+        {
+            public int X;
+            public int Y;
+            public int Z;
 
-            public struct Address
+            public PositionXYZ(int x,int y,int z)
             {
-                public int x;
-                public int y;
-                public int z;
+                this.X = x;
+                this.Y = y;
+                this.Z = z;
             }
         }
 
@@ -465,6 +463,8 @@ namespace CellGA.RhinoTools
             public int Upper;
             public int[] LowerNeighbor;
             public int Lower;
+
+            public IPosition Position;
 
             public int CountNeighbor(int target)
             {

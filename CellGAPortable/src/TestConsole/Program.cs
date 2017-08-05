@@ -124,7 +124,7 @@ namespace TestConsole
                         }
                     }
                 }
-                Console.WriteLine("Best:" + Evaluations[genes[0]]);
+                //Console.WriteLine("Best:" + Evaluations[genes[0]]);
             }
             Console.WriteLine();
             Console.WriteLine(genes[0].GetBoxel(3).ToString(0));
